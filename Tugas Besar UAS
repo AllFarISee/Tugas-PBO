@@ -1,0 +1,210 @@
+import java.util.HashMap;
+import java.util.Scanner;
+
+public class LoginSystem {
+    private static HashMap<String, User> users = new HashMap<>();
+    private static String[] clothes = {
+        "DeadSquad - Curse Of The Black Plague", 
+        "COLORCODE - Check My Sanity",
+        "KOIL - Megalo Emperor", 
+        "Revenge The Fate - Sinsera", 
+        "Eastcape - Obsessed", 
+        "The Sigit - Another Day", 
+        "Morfem - Sneakerfuzz", 
+        "Darksovls - Radiusinis", 
+        "Modern Guns - Everything Falls Apart", 
+        "Puppen - Injak Balik!"
+    };
+    // Wrapper Class
+    private static Integer[] stock = {5, 2, 6, 8, 1, 2, 9, 3, 2, 1};
+    private static Integer[] prices = {180000, 155000, 160000, 200000, 180000, 160000, 140000, 160000, 160000, 190000};
+    private static Double totalRevenue = 0.0; 
+
+    public static void main(String[] args) {
+        initializeUsers();
+        Scanner scanner = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("\n========= WELCOME TO =========");
+            System.out.println("===== ALL FAR I SEE MERCH =====");
+            System.out.print("Masukkan Username: ");
+            String username = scanner.nextLine();
+            System.out.print("Masukkan Password: ");
+            String password = scanner.nextLine();
+            // Cek login
+            if (login(username, password)) {
+                User user = users.get(username);
+                if (user instanceof Admin) {
+                    System.out.println("Selamat datang, Admin!");
+                    ((Admin) user).userMenu(scanner);
+                } else if (user instanceof Customer) {
+                    System.out.println("Selamat datang, User!");
+                    ((Customer) user).userMenu(scanner);
+                }
+            } else {
+                System.out.println("Username atau Password salah!");
+            }
+
+            System.out.print("Apakah Anda ingin login kembali? (y/n): ");
+            String retry = scanner.nextLine();
+            if (retry.equalsIgnoreCase("n")) {
+                System.out.println("Terima kasih! Program selesai.");
+                break;
+            }
+        }
+        scanner.close();
+    }
+    //EnumType
+    public enum UserRole {
+    ADMIN, CUSTOMER
+    }
+    private static void initializeUsers() {
+        // Menambahkan akun admin dan pengguna
+        users.put("admin", new Admin("admin", "admin123", UserRole.ADMIN));
+        users.put("user", new Customer("user", "user123", UserRole.CUSTOMER));
+        users.put("user2", new Customer("user2", "user234", UserRole.CUSTOMER));
+    }
+
+    private static boolean login(String username, String password) {
+        // Pengecekan apakah username dan password sesuai
+        User user = users.get(username);
+        return user != null && user.getPassword().equals(password);
+    }
+
+    private static void displayStock() {
+        System.out.println("\nDaftar Stok Baju:");
+        System.out.printf("%-40s %-10s %-10s\n", "Nama Baju", "Stok", "Harga");
+        System.out.println("------------------------------");
+        for (int i = 0; i < clothes.length; i++) {
+            System.out.printf("%-40s %-10d Rp.%-10.2f\n", clothes[i], stock[i], prices[i]);
+        }
+    }
+
+    //SUPERCLASS untuk menyimpan informasi pengguna
+    //POLYMORPHISM Kelas induk
+    static abstract class User { //Abstract Class
+        private String username;    
+        private String password;
+        private UserRole role;
+        public User(String username, String password, UserRole role) {
+            this.username = username;
+            this.password = password;
+            this.role = role;
+        }
+        public String getUsername() {
+            return username;
+        }
+        public String getPassword() {
+            return password;
+        }
+        public UserRole getRole() {
+            return role;
+        }
+        public abstract void userMenu(Scanner scanner); //Abstract Method
+    }
+    // POLYMORPHISM : Kelas Admin yang meng inherit kelas User
+    static class Admin extends User { // Inner Class
+        public Admin(String username, String password, UserRole role) {
+            super(username, password, role);
+        }
+        //Method Overiding
+        @Override
+        public void userMenu(Scanner scanner) {
+            while (true) {
+                System.out.println("\n=== Menu Admin ===");
+                System.out.println("1. Lihat Stok dan Pendapatan");
+                System.out.println("2. Perbarui Stok");
+                System.out.println("3. Keluar ke Menu Login");
+                System.out.print("Pilih opsi: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine(); 
+
+                switch (choice) {
+                    case 1:
+                        displayStock();
+                        System.out.printf("Total Pendapatan: Rp.%.2f\n", totalRevenue);
+                        break;
+                    case 2:
+                        updateStock(scanner);
+                        break;
+                    case 3:
+                        System.out.println("Keluar dari menu Admin.");
+                        return;
+                    default:
+                        System.out.println("Opsi tidak valid!");
+                }
+            }
+        }
+
+        private void updateStock(Scanner scanner) {
+            displayStock();
+            System.out.print("Masukkan nomor item yang ingin diperbarui (1-10): ");
+            int itemNumber = scanner.nextInt();
+            if (itemNumber < 1 || itemNumber > clothes.length) {
+                System.out.println("Nomor item tidak valid!");
+                return;
+            }
+            System.out.print("Masukkan jumlah stok baru: ");
+            int newStock = scanner.nextInt();
+            stock[itemNumber - 1] = newStock;
+            System.out.println("Stok berhasil diperbarui.");
+        }
+    }
+    // Kelas Customer yang meng inherits kelas User
+    static class Customer extends User { // Inner Class
+        public Customer(String username, String password, UserRole role) {
+            super(username, password, role);
+        }
+        // Method Overiding
+        @Override
+        public void userMenu(Scanner scanner) {
+            while (true) {
+                System.out.println("\n=== Menu User ===");
+                System.out.println("1. Lihat Stok Baju");
+                System.out.println("2. Beli Baju");
+                System.out.println("3. Keluar ke Menu Login");
+                System.out.print("Pilih opsi: ");
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+
+                switch (choice) {
+                    case 1:
+                        displayStock();
+                        break;
+                    case 2:
+                        buyClothes(scanner);
+                        break;
+                    case 3:
+                        System.out.println("Keluar dari menu User.");
+                        return;
+                    default:
+                        System.out.println("Opsi tidak valid!");
+                }
+            }   
+        }
+
+        private void buyClothes(int itemNumber, int quantity) {
+            if (itemNumber < 1 || itemNumber > clothes.length) {
+                System.out.println("Nomor item tidak valid!");
+                return;
+            }
+            if (quantity <= stock[itemNumber - 1]) {
+                double totalPrice = quantity * prices[itemNumber - 1];
+                stock[itemNumber - 1] -= quantity;
+                totalRevenue += totalPrice;
+                System.out.printf("Anda berhasil membeli %d %s dengan total harga Rp.%.2f\n", quantity, clothes[itemNumber - 1], totalPrice);
+            } else {
+                System.out.println("Stok tidak mencukupi.");
+            }
+        }
+        //Overloading Method
+        private void buyClothes(Scanner scanner) {
+            displayStock();
+            System.out.print("Masukkan nomor item yang ingin dibeli (1-10): ");
+            int itemNumber = scanner.nextInt();
+            System.out.print("Masukkan jumlah yang ingin dibeli: ");
+            int quantity = scanner.nextInt();
+            buyClothes(itemNumber, quantity); // memanggil overloading method
+        }
+    }
+}
